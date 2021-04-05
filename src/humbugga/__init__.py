@@ -408,6 +408,7 @@ def unpack(archive, path):
                '.tar.xz': tarfile.open,
                '.tar.bz2': tarfile.open}
     _, format = os.path.splitext(archive)
+    # TODO: https://docs.python.org/3/library/shutil.html#shutil.unpack_archive
     
     try:
         format = formats[format]
@@ -434,6 +435,12 @@ def install(url, checksum=None, pkg=None):
 
     
     """
+
+    # TODO:
+    # - if given pkg= then we can support versioning:
+    # - check metadata/"pkg"/pkg/source; is it the same as URL? if not, download the new one
+    #   - probably wanna be careful to not *uninstall* the old one until the new one is downloaded and checksummed
+
     # 1. Check if url is already installed. If so, skip.
     # 2. If not, download it
     #   -> check the *cache* first, and check for partially downloaded files too.
@@ -480,9 +487,10 @@ def install(url, checksum=None, pkg=None):
         checksum = checksum.lower() # case-insensitive
 
     # skip if installed
-    if installed(url):
-        warnings.warn(f"{url} already installed.")
-        return
+    if (pkg is not None and installed(pkg)) or (pkg is None and installed(url)):
+        if _get(pkg or url)['source'] == url:
+            warnings.warn(f"{url} already installed.")
+            return
 
     # set up the cache
     cache = xdg.BaseDirectory.save_cache_path(os.path.join(APP,'humbugga')) # TODO: add /var/lib/$APP or /var/cache to the cache paths, and use it if we have write access to it
@@ -521,13 +529,29 @@ def install(url, checksum=None, pkg=None):
     if len(os.listdir(subdata))==1 and os.path.isdir(subdata/(os.listdir(subdata)[0])):
         if pkg is None:
             pkg = os.listdir(subdata)[0]
+        # uninstall the previous version
+        # at this point we know, either:
+        # - pkg is None and not installed(url) or
+        # - pkg is not None and installed(pkg) # -> need to uninstall
+        if (pkg is not None and installed(pkg)):
+            uninstall(pkg)
         os.rename(subdata/(os.listdir(subdata)[0]), data/pkg) # this should be atomic since it's on the same filesystem since one is a subdir of the other.
         os.rmdir(subdata)
     else:
         if pkg is None:
             pkg = os.path.basename(file) # name for the pkg; used as a shortname, later; sort of janky that the *server* gets to pick this.
             pkg, _ = os.path.splitext(pkg)
+
+        # uninstall the previous version
+        # at this point we know, either:
+        # - pkg is None and not installed(url) or
+        # - pkg is not None and installed(pkg) # -> need to uninstall
+        # TODO: merge
+        if (pkg is not None and installed(pkg)):
+            uninstall(pkg)
+
         os.rename(subdata, data/pkg)
+
 
     # write record of installation
     metadata = pathlib.Path(xdg.BaseDirectory.save_data_path(os.path.join(APP, 'humbugga')))
@@ -639,7 +663,7 @@ def uninstall(pkg):
     shutil.rmtree(data/p['name'])
     metadata = pathlib.Path(xdg.BaseDirectory.save_data_path(os.path.join(APP, 'humbugga')))
     shutil.rmtree(metadata/"pkgs"/p['name'])
-    shutil.rmtree(metadata/"sources"/p['encoded_url'])
+    os.unlink(metadata/"sources"/p['encoded_url'])
 
 
 def path(pkg):
@@ -669,7 +693,8 @@ def list(): # XXX namespace collision oops
 APP='glove'
 #install('http://nlp.stanford.edu/data/glove.840B.300d.zip', 'sha256:c06db255e65095393609f19a4cfca20bf3a71e20cc53e892aafa490347e3849f')
 #install('https://github.com/sct-data/PAM50/releases/download/r20201104/PAM50-r20201104.zip', 'sha256:db50286e268f4886335fb1edc83b431cae40a9e05487360628c46b3002dd0918')
-install('https://github.com/sct-data/PAM50/releases/download/r20201104/PAM50-r20201104.zip')
+install('https://github.com/sct-data/PAM50/releases/download/r20201104/PAM50-r20201104.zip', pkg='PAM50')
+install('https://github.com/sct-data/PAM50/releases/download/r20191029/20191029_pam50.zip', pkg='PAM50')
 #install('http://www.nltk.org/images/authors.png')
 #install('https://www.dropbox.com/s/pwokjjnrexg0zl6/cohenadad_cv__20190424.pdf?dl=1', '.')
 p = path('https://github.com/sct-data/PAM50/releases/download/r20201104/PAM50-r20201104.zip')
