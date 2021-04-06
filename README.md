@@ -128,4 +128,4 @@ TODO
 
 * https://github.com/nltk/nltk/blob/develop/nltk/downloader.py
 * something in the tensorflow scene?
-* 
+* https://www.fatiando.org/pooch/latest/
