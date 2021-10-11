@@ -132,3 +132,4 @@ TODO
 * [`tensorflow.keras.utils.data_utils.get_file`](https://github.com/tensorflow/tensorflow/blob/8404ae713bab07bf008e2af0d2b573dd7e69c56e/tensorflow/python/keras/utils/data_utils.py#L150) as used in e.g. [`tensorflow.keras.datasets.fashion_mnist.load_data`](https://github.com/tensorflow/tensorflow/blob/8404ae713bab07bf008e2af0d2b573dd7e69c56e/tensorflow/python/keras/datasets/fashion_mnist.py#L81-L90)
 * [`torch.utils.data.Dataset`](https://github.com/pytorch/pytorch/blob/master/torch/utils/data/dataset.py) as used in e.g. [`torchvision.datasets`](https://github.com/pytorch/vision/tree/master/torchvision/datasets)
 * [`torchio.data.dataset`](https://github.com/fepegar/torchio/blob/master/torchio/data/dataset.py) as used in [`torchio.datasets`](https://github.com/fepegar/torchio/tree/master/torchio/datasets)
+* [`academictorrents.get()`](https://github.com/academictorrents/at-python)
